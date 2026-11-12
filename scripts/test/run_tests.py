@@ -15,6 +15,7 @@ through to the app is caught.
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -495,6 +496,76 @@ def no_leaks_after_many_sessions(t):
     idle_state(t, r['state'])
     t.check(r['visible'] is True, 'pointer hidden after many sessions')
     t.check(r['grab'] is False, 'grab left behind after many sessions')
+
+
+@test
+def second_autoscroll_starts_still(t):
+    # Regression test: the second autoscroll used to scroll the page on its
+    # own, at the speed of the previous one, with the mouse held still.
+    scenario("""
+        await AS.click('middle');
+        await AS.glide(0, 150, 60, 6);
+        await AS.sleep(600);
+        await AS.click('left');
+        for (let i = 0; i < 8; i++) {
+            AS.move(i % 2 ? 1 : -1, 0);
+            await AS.sleep(50);
+        }
+        return 'ok';
+    """)
+    time.sleep(0.5)
+    mark = app_mark()
+    r = scenario("""
+        await AS.click('middle');
+        for (let i = 0; i < 24; i++) {
+            AS.move(i % 2 ? 1 : -1, 0);
+            await AS.sleep(50);
+        }
+        const during = AS.state();
+        await AS.click('left');
+        await AS.sleep(200);
+        return JSON.stringify({during, after: AS.state()});
+    """)
+    moved = [e for e in app_events_since(mark) if e['ev'] == 'position']
+    t.check(r['during']['session'] is not None, 'the second autoscroll did not start')
+    t.check(not moved, f'the page scrolled during the second autoscroll: {moved[:4]}')
+    idle_state(t, r['after'])
+
+
+@test
+def browsers_never_fling(t):
+    # Chromium and Firefox fling a touchpad-style scroll gesture on when it
+    # ends. Checks that the page stops dead: after stopping, after a second
+    # middle-click elsewhere, and while resting on the marker.
+    js = open(os.path.join(ROOT, 'scripts/test/second-session.js')).read()
+    tested = 0
+    for browser in ('chromium', 'firefox'):
+        if not shutil.which(browser):
+            continue
+        tested += 1
+        subprocess.run([os.path.join(ROOT, 'scripts/test/launch-browser.sh'), browser], check=True)
+        time.sleep(10)
+        try:
+            r = shell(f"const P = {{wmClass: '{browser}'}};\n{js}")
+            if not isinstance(r, dict):
+                t.failures.append(f'{browser}: {r}')
+                continue
+            # Browsers draw the last scroll events up to ~150 ms late.
+            for phase in ('afterStop', 'restingOnMarker', 'afterFinalStop'):
+                settled = r[phase][2:]
+                t.check(max(settled) - min(settled) <= 2, f'{browser} kept scrolling ({phase}): {r[phase]}')
+            t.check(all(abs(v) <= 2 for v in r['afterSecondClick']),
+                    f'{browser} scrolled after the second middle-click: {r["afterSecondClick"]}')
+        finally:
+            shell(f"""(() => {{
+                for (const a of global.get_window_actors())
+                    if ((a.meta_window.get_wm_class() ?? '').toLowerCase().includes('{browser}'))
+                        a.meta_window.delete(global.get_current_time());
+                return 'ok';
+            }})()""")
+            time.sleep(1)
+    if not tested:
+        print('      (skipped: neither Chromium nor Firefox is installed)')
 
 
 def main():

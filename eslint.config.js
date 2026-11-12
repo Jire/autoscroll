@@ -62,7 +62,7 @@ export default [
     },
     {
         // Prepended to code run through org.gnome.Shell.Eval (see scripts/test/headless.sh).
-        files: ['scripts/test/driver.js', 'scripts/test/measure-browser.js'],
+        files: ['scripts/test/driver.js', 'scripts/test/measure-browser.js', 'scripts/test/second-session.js'],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'script',

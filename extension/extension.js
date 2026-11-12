@@ -63,10 +63,19 @@ const SPEED_SCALE = 0.008;
 const SPEED_EXPONENT = 2.2;
 // After a stall, never scroll more than this many seconds' worth at once.
 const MAX_FRAME_TIME = 0.1;
-// Apps that see the end of a scroll gesture (touchpad style) start a kinetic
-// fling from the last movement. So the gesture is only finished once nothing
-// has scrolled for this long, while the pointer is still on the app.
-const SCROLL_END_DELAY_US = 300 * 1000;
+// Scrolling is sent like a touchpad's, as a gesture, and when a gesture ends,
+// apps start a kinetic fling. Windows stops dead, so the end is made so that
+// no app flings: GTK and Firefox take the speed from the last 100-150 ms of
+// scroll events (by their timestamps), so the end is timed GESTURE_END_GAP
+// after the last real one. Chromium takes it from its last three scroll
+// events however old they are, but only flings when the end comes with no
+// movement at all, so the end still moves a tiny bit (GESTURE_END_NUDGE
+// units, a small fraction of a pixel) along the axis it doesn't end.
+const GESTURE_END_GAP_US = 200 * 1000;
+const GESTURE_END_NUDGE = 0.02;
+// While the pan cursor rests in the dead zone, the gesture is ended after
+// this long (also so that GTK snaps back from scrolling past an edge).
+const SCROLL_REST_US = 300 * 1000;
 // Half-length of the barriers that pin the pointer while autoscrolling.
 const PIN_REACH = 64;
 // Our own injected events are recognised by their timestamps.
@@ -499,28 +508,27 @@ class Engine {
 
         const [vx, vy] = this._velocity(session);
         const units = seconds / session.unitPixels;
-        if (vx || vy)
-            this._scroll(now, vx * units, vy * units);
-        else if (this._gestureOpen && now - this._lastScrollTime > SCROLL_END_DELAY_US)
+        if (vx || vy) {
+            this._sendScroll(now, vx * units, vy * units, Clutter.ScrollFinishFlags.NONE);
+            this._gestureOpen = true;
+            this._lastScrollTime = now;
+        } else if (this._gestureOpen && now - this._lastScrollTime > SCROLL_REST_US) {
             this._finishGesture();
+        }
     }
 
-    _scroll(time, dx, dy) {
-        this._remember(time);
-        this._device.notify_scroll_continuous(time, dx, dy, this._scrollSource,
-            Clutter.ScrollFinishFlags.NONE);
-        this._gestureOpen = true;
-        this._lastScrollTime = time;
-    }
-
+    /** Ends the scroll gesture without the app flinging it on (see GESTURE_END_GAP_US). */
     _finishGesture() {
         if (!this._gestureOpen)
             return;
         this._gestureOpen = false;
-        const time = GLib.get_monotonic_time();
+        const time = Math.max(GLib.get_monotonic_time(), this._lastScrollTime + GESTURE_END_GAP_US);
+        this._sendScroll(time, 0, GESTURE_END_NUDGE, Clutter.ScrollFinishFlags.HORIZONTAL);
+    }
+
+    _sendScroll(time, dx, dy, finish) {
         this._remember(time);
-        this._device.notify_scroll_continuous(time, 0, 0, this._scrollSource,
-            Clutter.ScrollFinishFlags.HORIZONTAL | Clutter.ScrollFinishFlags.VERTICAL);
+        this._device.notify_scroll_continuous(time, dx, dy, this._scrollSource, finish);
     }
 
     // ---- Stopping
@@ -534,9 +542,9 @@ class Engine {
 
         session.window.disconnectObject(session);
         this._stopFrames();
-        // The scroll gesture is deliberately left open: finishing it now would
-        // make apps turn the last movement into a kinetic fling, and Windows
-        // stops dead. It's finished later, when it's safe (see _frame).
+        // End the gesture while the pointer is still pinned to the app, so the
+        // app gets the end (and, like Windows, doesn't fling the page on).
+        this._finishGesture();
         this._unpin();
 
         const seat = this._seat;
