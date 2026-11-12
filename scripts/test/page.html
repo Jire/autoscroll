@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<!-- Test page for the headless browser tests: reports its scroll position and
+     the mouse/focus events it receives in the window title. -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Y=0 X=0 E=</title>
+<style>
+  body { margin: 0; font: 16px sans-serif; width: 6000px; }
+  .top { height: 140px; padding: 20px; box-sizing: border-box; }
+  a { font-size: 22px; margin-right: 40px; }
+  .row { height: 100px; border-bottom: 1px solid #ccd; padding-left: 20px; line-height: 100px; }
+  .row:nth-child(odd) { background: #f3f5ff; }
+</style>
+</head>
+<body>
+<div class="top"><a id="link" href="#link-clicked">A link</a> <input value="A text field"></div>
+<div id="rows"></div>
+<script>
+  const rows = document.getElementById('rows');
+  for (let i = 0; i < 3000; i++) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.textContent = `Row ${i}`;
+    rows.appendChild(row);
+  }
+  const events = [];
+  for (const type of ['mousedown', 'mouseup', 'auxclick', 'click'])
+    addEventListener(type, e => events.push(`${type[0]}${e.button}`), true);
+  addEventListener('blur', () => events.push('blur'));
+  addEventListener('focus', () => events.push('focus'));
+  addEventListener('hashchange', () => events.push('hash'));
+  const report = () => {
+    document.title = `Y=${Math.round(scrollY)} X=${Math.round(scrollX)} E=${events.join(',')}`;
+    requestAnimationFrame(report);
+  };
+  report();
+</script>
+</body>
+</html>

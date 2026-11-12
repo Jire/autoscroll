@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.autoscroll"
+          path="/org/gnome/shell/extensions/autoscroll/">
+    <key name="activation" type="s">
+      <choices>
+        <choice value="click-or-hold"/>
+        <choice value="hold"/>
+      </choices>
+      <default>'click-or-hold'</default>
+      <summary>How autoscroll starts</summary>
+      <description>"click-or-hold" works like Windows: click the middle button to start scrolling and click again to stop, or hold it down, move, and release. "hold" only scrolls while the middle button is held down; a quick middle-click is passed to the app as a normal middle-click.</description>
+    </key>
+    <key name="speed" type="d">
+      <range min="0.25" max="4.0"/>
+      <default>1.0</default>
+      <summary>Scroll speed</summary>
+      <description>Multiplier for how fast pages scroll for a given distance from the starting point. 1.0 matches Windows (Microsoft Edge and Google Chrome).</description>
+    </key>
+    <key name="vertical-only" type="b">
+      <default>false</default>
+      <summary>Vertical scrolling only</summary>
+      <description>Ignore sideways movement, so autoscroll only ever scrolls up and down.</description>
+    </key>
+    <key name="pass-through-links" type="b">
+      <default>true</default>
+      <summary>Middle-click on links works as usual</summary>
+      <description>When the mouse pointer is a hand (over a link or button), a middle-click goes to the app instead of starting autoscroll, so links still open in a new tab.</description>
+    </key>
+    <key name="pass-through-text" type="b">
+      <default>false</default>
+      <summary>Middle-click on text works as usual</summary>
+      <description>When the mouse pointer is a text cursor, a middle-click goes to the app instead of starting autoscroll (for example to paste). In web browsers the text cursor also shows over ordinary page text, so this stops autoscroll from starting there too.</description>
+    </key>
+    <key name="pass-through-top" type="b">
+      <default>true</default>
+      <summary>Middle-click near the top of windows works as usual</summary>
+      <description>A middle-click in the top part of a window (title bars, header bars, browser tabs) goes to the app instead of starting autoscroll, so middle-clicking a tab still closes it.</description>
+    </key>
+    <key name="top-height" type="i">
+      <range min="8" max="240"/>
+      <default>48</default>
+      <summary>Height of the top area, in logical pixels</summary>
+      <description>How far down from the top edge of a window a middle-click still goes to the app, when pass-through-top is on.</description>
+    </key>
+    <key name="pass-through-modifier" type="s">
+      <choices>
+        <choice value="none"/>
+        <choice value="ctrl"/>
+        <choice value="shift"/>
+        <choice value="alt"/>
+        <choice value="super"/>
+      </choices>
+      <default>'ctrl'</default>
+      <summary>Key for a normal middle-click</summary>
+      <description>While this key is held, a middle-click always goes to the app instead of starting autoscroll.</description>
+    </key>
+    <key name="excluded-apps" type="as">
+      <default>[
+        'org.gnome.Ptyxis.desktop', 'org.gnome.Console.desktop', 'org.gnome.Terminal.desktop',
+        'com.mitchellh.ghostty.desktop', 'kitty.desktop', 'Alacritty.desktop',
+        'org.wezfurlong.wezterm.desktop', 'foot.desktop', 'footclient.desktop',
+        'org.kde.konsole.desktop', 'xterm.desktop', 'uxterm.desktop', 'terminator.desktop',
+        'com.gexperts.Tilix.desktop', 'io.elementary.terminal.desktop',
+        'com.raggesilver.BlackBox.desktop', 'dev.warp.Warp.desktop', 'guake.desktop', 'tilda.desktop',
+        'blender.desktop', 'org.blender.Blender.desktop', 'gimp.desktop', 'org.gimp.GIMP.desktop',
+        'org.inkscape.Inkscape.desktop', 'org.kde.krita.desktop', 'org.freecad.FreeCAD.desktop',
+        'freecad.desktop', 'org.kicad.kicad.desktop', 'org.kicad.pcbnew.desktop',
+        'org.kicad.eeschema.desktop', 'org.kicad.gerbview.desktop', 'org.openscad.OpenSCAD.desktop',
+        'org.godotengine.Godot.desktop', 'org.godotengine.Godot4.desktop',
+        'darktable.desktop', 'org.darktable.darktable.desktop', 'com.github.flxzt.rnote.desktop',
+        'com.github.xournalpp.xournalpp.desktop', 'com.prusa3d.PrusaSlicer.desktop',
+        'PrusaSlicer.desktop', 'com.ultimaker.cura.desktop', 'io.github.softfever.OrcaSlicer.desktop',
+        'com.bambulab.BambuStudio.desktop', 'org.qgis.qgis.desktop', 'org.librecad.librecad.desktop',
+        'org.remmina.Remmina.desktop', 'org.gnome.Connections.desktop', 'org.gnome.Boxes.desktop',
+        'virt-manager.desktop', 'org.virt_manager.virt-manager.desktop', 'remote-viewer.desktop',
+        'virtualbox.desktop', 'vmware-workstation.desktop', 'vmware-player.desktop',
+        'rustdesk.desktop', 'com.rustdesk.RustDesk.desktop', 'anydesk.desktop',
+        'com.moonlight_stream.Moonlight.desktop', 'com.parsecgaming.parsec.desktop',
+        'vncviewer.desktop', 'org.tigervnc.vncviewer.desktop',
+        'runelite.desktop', 'net.runelite.RuneLite.desktop',
+        'wmclass:steam_app_*', 'wmclass:gamescope', 'wmclass:*.exe', 'wmclass:VirtualBox Machine',
+        'wmclass:RuneLite', 'wmclass:net-runelite-*'
+      ]</default>
+      <summary>Apps without autoscroll</summary>
+      <description>Middle-clicks in these apps always go to the app. Entries ending in ".desktop" are app IDs. Entries starting with "wmclass:" match a window's WM_CLASS and may use * and ? wildcards.</description>
+    </key>
+    <key name="debug" type="b">
+      <default>false</default>
+      <summary>Debug logging</summary>
+      <description>Log why each middle-click did or didn't start autoscroll, and when it stops, to the system journal.</description>
+    </key>
+  </schema>
+</schemalist>

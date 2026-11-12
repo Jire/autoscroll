@@ -1,0 +1,15 @@
+{
+  "uuid": "autoscroll@jire.github.io",
+  "name": "Autoscroll",
+  "description": "Windows-style middle-click autoscroll in every app.\n\n• Click the middle mouse button, then move the mouse to scroll; the further you move, the faster it goes. Click again to stop\n• Or hold the middle button, move, and let go\n• Shows the same origin marker and direction arrows as Windows\n• Works in browsers, editors, file managers, Electron, Qt and XWayland apps\n• Middle-clicking links and browser tabs still works, and terminals keep middle-click paste",
+  "url": "https://github.com/Jire/autoscroll",
+  "shell-version": [
+    "46",
+    "47",
+    "48",
+    "49",
+    "50",
+    "51"
+  ],
+  "settings-schema": "org.gnome.shell.extensions.autoscroll"
+}
